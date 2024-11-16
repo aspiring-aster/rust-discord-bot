@@ -1,4 +1,5 @@
 //! Lib.rs
+pub mod game;
 pub mod helpers;
 
 pub use helpers::*;

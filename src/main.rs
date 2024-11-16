@@ -1,34 +1,33 @@
 use rust_discord_bot::*;
-use serenity::all::{CreateEmbed, CreateEmbedFooter, CreateMessage};
-use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
+use serenity::model::{permissions, prelude::*};
 use serenity::{async_trait, gateway};
+use std::env;
 
 struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.guild_id != None {
-            return;
-        }
-        match msg.content.as_str() {
-            "clear" => {
-                clear_messages(ctx, msg).await;
-            }
-            "quiz" => {
-                let footer = CreateEmbedFooter::new("Bot of '09 Developed by @anon for Class of '09").icon_url("https://images-ext-1.discordapp.net/external/AJhyvuDbJn-xEOg-8aZWAUtsg7Z9OGkWuSOminCc0hk/%3Fsize%3D256/https/cdn.discordapp.com/icons/1129581515584589914/162d2a7c4059aa53aba76bba0702788e.webp");
-                let embed = CreateEmbed::new()
-                    .title("Quiz Results")
-                    .footer(footer)
-                    .description("# You Have Successfully Completed The Quiz!")
-                    .image("https://i.imgur.com/cdSerzD.png")
-                    .thumbnail("https://i.imgur.com/cfXguCv.png");
-                let new_m = CreateMessage::new().add_embed(embed);
-                msg.channel_id.send_message(&ctx.http, new_m).await.ok();
-            }
-            _ => {}
-        }
+    async fn guild_member_addition(&self, ctx: Context, new_member: Member) {
+        println!(
+            "Another Ram, another rodeo. New user: {}",
+            new_member.display_name()
+        );
+        // TODO: Make this something else later
+        // new_member.kick(&ctx).await.unwrap();
+
+        // let text = new_member.permissions(&ctx).unwrap().send_messages();
+        // println!("{}", text);
+
+        // new_member
+        //     .permissions(&ctx)
+        //     .unwrap()
+        //     .toggle(permissions::PRESET_GENERAL);
+
+        // let text = new_member.permissions(&ctx).unwrap().send_messages();
+        // println!("{}", text);
+        let dm_channel = new_member.user.create_dm_channel(&ctx).await.unwrap();
+        start_quiz(ctx, dm_channel).await;
     }
 
     async fn ready(&self, _: Context, ready: Ready) {
@@ -38,13 +37,15 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    const TOKEN: &str = "";
+    dotenv::dotenv().ok();
+    let token = env::var("DISCORD_TOKEN").expect("Fatality! DISCORD_TOKEN not set!");
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::GUILD_MEMBERS
         | GatewayIntents::MESSAGE_CONTENT;
 
     let activity_data = gateway::ActivityData::playing("Class of `09");
-    let mut client = Client::builder(&TOKEN, intents)
+    let mut client = Client::builder(token, intents)
         .event_handler(Handler)
         .activity(activity_data)
         .await

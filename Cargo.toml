@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serenity = {version= "0.12.2", features = ["gateway"]}
+dotenv = "0.15.0"
+serenity = {version= "0.12.2", features = ["gateway", "model", "collector"]}
 tokio = { version = "1.40.0", features = ["macros", "rt-multi-thread"] }
